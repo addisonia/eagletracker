@@ -19,10 +19,15 @@ html, body, #viewDiv {
 }
 
 #settingsBtn {
-    font-size: 24px;
     background: none;
     border: none;
     cursor: pointer;
+    padding: 0;
+}
+
+#settingsBtn img {
+    width: 24px;
+    height: 24px;
 }
 
 #searchBar {

@@ -7,8 +7,9 @@ require([
     "esri/layers/FeatureLayer",
     "esri/geometry/Point",
     "esri/widgets/Popup",
-    "esri/rest/support/FeatureSet"
-], function(esriConfig, Map, MapView, Search, Graphic, FeatureLayer, Point, Popup, FeatureSet) {
+    "esri/rest/support/FeatureSet",
+    "esri/widgets/Locate"
+], function(esriConfig, Map, MapView, Search, Graphic, FeatureLayer, Point, Popup, FeatureSet, Locate) {
 
     // Midterm_API key
     esriConfig.apiKey = "AAPTxy8BH1VEsoebNVZXo8HurIMrpomeP09wA2mwDUzsv0qeG0ISCTpeTdFxzbJ-cyUaFo-9XhFvb2y3Ps4A2zWSfrftoqLWuot4lXYMNzoFBkDUoCb8jxcGwyOUD2pISEQQnWWGGZofh7_cB7YvPCG_6nfnOyI48dtNFykpOfUPCCiYNq0iZim3jZ_mF1WVIe8HoKc4qK-GLE0Zeuqls8UmxvtsnKzjGTHgPmbJMjfDrjY2XxUJkTWK0ZizpkBgFuDe6zfjbBtDp76EGl2dOWh1AVAyaY2elCyr_9CmM8n6oe8.AT1_sTU4Pkej";
@@ -24,8 +25,19 @@ require([
         zoom: 4
     });
 
+    // Move zoom widget to bottom-left corner
+    view.ui.move("zoom", "bottom-left");
+
+    // Add locate widget
+    const locateBtn = new Locate({
+        view: view
+    });
+
+    view.ui.add(locateBtn, {
+        position: "bottom-left"
+    });
+
     // Define the feature layer for eagle sightings
-    // Replace the URL below with your actual Feature Layer URL
     const eagleLayer = new FeatureLayer({
         url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Midterm_Layer/FeatureServer",
         outFields: ["*"],
