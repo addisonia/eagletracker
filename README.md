@@ -1,2 +1,1 @@
-# eagletracker
-geog576 midterm project
+website link: https://addisonia.github.io/eagletracker/
