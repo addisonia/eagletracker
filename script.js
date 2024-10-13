@@ -8,8 +8,9 @@ require([
     "esri/geometry/Point",
     "esri/widgets/Popup",
     "esri/rest/support/FeatureSet",
-    "esri/widgets/Locate"
-], function(esriConfig, Map, MapView, Search, Graphic, FeatureLayer, Point, Popup, FeatureSet, Locate) {
+    "esri/widgets/Locate",
+    "esri/Basemap"
+], function(esriConfig, Map, MapView, Search, Graphic, FeatureLayer, Point, Popup, FeatureSet, Locate, Basemap) {
 
     // Midterm_API key
     esriConfig.apiKey = "AAPTxy8BH1VEsoebNVZXo8HurIMrpomeP09wA2mwDUzsv0qeG0ISCTpeTdFxzbJ-cyUaFo-9XhFvb2y3Ps4A2zWSfrftoqLWuot4lXYMNzoFBkDUoCb8jxcGwyOUD2pISEQQnWWGGZofh7_cB7YvPCG_6nfnOyI48dtNFykpOfUPCCiYNq0iZim3jZ_mF1WVIe8HoKc4qK-GLE0Zeuqls8UmxvtsnKzjGTHgPmbJMjfDrjY2XxUJkTWK0ZizpkBgFuDe6zfjbBtDp76EGl2dOWh1AVAyaY2elCyr_9CmM8n6oe8.AT1_sTU4Pkej";
@@ -61,6 +62,52 @@ require([
     });
 
     document.getElementById("addEagleBtn").addEventListener("click", addEagle);
+
+
+    // Add settings button functionality
+    const settingsBtn = document.getElementById("settingsBtn");
+    settingsBtn.addEventListener("click", toggleSettingsMenu);
+
+    let settingsMenu = null;
+
+    function toggleSettingsMenu() {
+        if (settingsMenu) {
+            document.body.removeChild(settingsMenu);
+            settingsMenu = null;
+        } else {
+            settingsMenu = document.createElement("div");
+            settingsMenu.id = "settingsMenu";
+            settingsMenu.style.position = "absolute";
+            settingsMenu.style.top = "60px";
+            settingsMenu.style.left = "10px";
+            settingsMenu.style.backgroundColor = "white";
+            settingsMenu.style.padding = "10px";
+            settingsMenu.style.borderRadius = "5px";
+            settingsMenu.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+            settingsMenu.style.zIndex = "100";
+
+            const basemapOption = document.createElement("button");
+            basemapOption.textContent = "Switch to Satellite";
+            basemapOption.style.display = "block";
+            basemapOption.style.width = "100%";
+            basemapOption.style.padding = "5px";
+            basemapOption.style.marginBottom = "5px";
+            basemapOption.addEventListener("click", toggleBasemap);
+
+            settingsMenu.appendChild(basemapOption);
+            document.body.appendChild(settingsMenu);
+        }
+    }
+
+    function toggleBasemap() {
+        if (map.basemap.title === "Topographic") {
+            map.basemap = Basemap.fromId("satellite");
+            settingsMenu.querySelector("button").textContent = "Switch to Topographic";
+        } else {
+            map.basemap = Basemap.fromId("topo-vector");
+            settingsMenu.querySelector("button").textContent = "Switch to Satellite";
+        }
+    }
 
     function addEagle() {
         const point = {
