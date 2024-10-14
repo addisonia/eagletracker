@@ -63,7 +63,6 @@ require([
 
     document.getElementById("addEagleBtn").addEventListener("click", addEagle);
 
-
     // Add settings button functionality
     const settingsBtn = document.getElementById("settingsBtn");
     settingsBtn.addEventListener("click", toggleSettingsMenu);
@@ -86,27 +85,38 @@ require([
             settingsMenu.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
             settingsMenu.style.zIndex = "100";
 
-            const basemapOption = document.createElement("button");
-            basemapOption.textContent = "Switch to Satellite";
-            basemapOption.style.display = "block";
-            basemapOption.style.width = "100%";
-            basemapOption.style.padding = "5px";
-            basemapOption.style.marginBottom = "5px";
-            basemapOption.addEventListener("click", toggleBasemap);
+            const basemapOptions = [
+                { id: "topo-vector", name: "Topographic" },
+                { id: "satellite", name: "Satellite" },
+                { id: "streets-vector", name: "Streets" }
+            ];
 
-            settingsMenu.appendChild(basemapOption);
+            basemapOptions.forEach(option => {
+                const basemapButton = document.createElement("button");
+                basemapButton.textContent = `Switch to ${option.name}`;
+                basemapButton.style.display = "block";
+                basemapButton.style.width = "100%";
+                basemapButton.style.padding = "5px";
+                basemapButton.style.marginBottom = "5px";
+                basemapButton.addEventListener("click", () => changeBasemap(option.id));
+                settingsMenu.appendChild(basemapButton);
+            });
+
             document.body.appendChild(settingsMenu);
         }
     }
 
-    function toggleBasemap() {
-        if (map.basemap.title === "Topographic") {
-            map.basemap = Basemap.fromId("satellite");
-            settingsMenu.querySelector("button").textContent = "Switch to Topographic";
-        } else {
-            map.basemap = Basemap.fromId("topo-vector");
-            settingsMenu.querySelector("button").textContent = "Switch to Satellite";
-        }
+    function changeBasemap(basemapId) {
+        map.basemap = Basemap.fromId(basemapId);
+        updateBasemapButtons();
+    }
+
+    function updateBasemapButtons() {
+        const buttons = settingsMenu.querySelectorAll("button");
+        buttons.forEach(button => {
+            const basemapName = button.textContent.replace("Switch to ", "");
+            button.disabled = map.basemap.title === basemapName;
+        });
     }
 
     function addEagle() {
