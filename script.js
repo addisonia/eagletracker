@@ -43,56 +43,56 @@ require([
         url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Midterm_Layer/FeatureServer",
         outFields: ["*"],
         popupTemplate: {
-            title: "Eagle Sighting",
+            title: "{Title}", // Use the 'Title' attribute for the popup title
             content: [
-              {
-                type: "fields",
-                fieldInfos: [
-                  { fieldName: "Notes", label: "Notes" }
-                ]
-              },
-              {
-                type: "text",
-                text: `Latitude: {expression/latitude}<br>Longitude: {expression/longitude}`
-              },
-              {
-                type: "custom",
-                creator: function(event) {
-                  const graphic = event.graphic;
-                  const div = document.createElement("div");
-          
-                  const editBtn = document.createElement("button");
-                  editBtn.innerText = "Edit";
-                  editBtn.onclick = function() {
-                    editEagle(graphic);
-                  };
-          
-                  const deleteBtn = document.createElement("button");
-                  deleteBtn.innerText = "Delete";
-                  deleteBtn.onclick = function() {
-                    deleteEagle(graphic);
-                  };
-          
-                  div.appendChild(editBtn);
-                  div.appendChild(deleteBtn);
-                  return div;
+                {
+                    type: "fields",
+                    fieldInfos: [
+                        { fieldName: "Notes", label: "Notes" }
+                    ]
+                },
+                {
+                    type: "text",
+                    text: `Latitude: {expression/latitude}<br>Longitude: {expression/longitude}`
+                },
+                {
+                    type: "custom",
+                    creator: function(event) {
+                        const graphic = event.graphic;
+                        console.log("Graphic attributes in popup:", graphic.attributes);
+                        const div = document.createElement("div");
+
+                        const editBtn = document.createElement("button");
+                        editBtn.innerText = "Edit";
+                        editBtn.onclick = function() {
+                            editEagle(graphic);
+                        };
+
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.innerText = "Delete";
+                        deleteBtn.onclick = function() {
+                            deleteEagle(graphic);
+                        };
+
+                        div.appendChild(editBtn);
+                        div.appendChild(deleteBtn);
+                        return div;
+                    }
                 }
-              }
             ],
             expressionInfos: [
-              {
-                name: "latitude",
-                title: "Latitude",
-                expression: "Round(Geometry($feature).y, 6)"
-              },
-              {
-                name: "longitude",
-                title: "Longitude",
-                expression: "Round(Geometry($feature).x, 6)"
-              }
+                {
+                    name: "latitude",
+                    title: "Latitude",
+                    expression: "Round(Geometry($feature).y, 6)"
+                },
+                {
+                    name: "longitude",
+                    title: "Longitude",
+                    expression: "Round(Geometry($feature).x, 6)"
+                }
             ]
-          }
-          
+        }
     });
 
     map.add(eagleLayer);
@@ -167,18 +167,25 @@ require([
             latitude: view.center.latitude
         };
 
-        // Prompt user for notes
-        const notes = prompt("Enter notes for this eagle sighting:");
+        // Prompt user for title and notes
+        const title = prompt("Enter a title for this eagle sighting:");
+        if (title === null) {
+            return; // User cancelled the prompt
+        }
 
+        const notes = prompt("Enter notes for this eagle sighting:");
         if (notes === null) {
             return; // User cancelled the prompt
         }
 
         const attributes = {
+            Title: title,
             Notes: notes,
             Latitude: view.center.latitude,
             Longitude: view.center.longitude
         };
+
+        console.log("Attributes being added:", attributes);
 
         const graphic = new Graphic({
             geometry: point,
@@ -192,7 +199,7 @@ require([
             if (result.addFeatureResults.length > 0) {
                 console.log("Successfully added feature");
                 view.popup.open({
-                    title: "Eagle Sighting Added",
+                    title: title,
                     content: `Notes: ${notes}<br>Latitude: ${view.center.latitude}<br>Longitude: ${view.center.longitude}`,
                     location: point
                 });
@@ -203,8 +210,12 @@ require([
     }
 
     function editEagle(graphic) {
-        const newNotes = prompt("Edit notes for this eagle sighting:", graphic.attributes.Notes);
+        const newTitle = prompt("Edit the title for this eagle sighting:", graphic.attributes.Title);
+        if (newTitle === null) {
+            return; // User cancelled the prompt
+        }
 
+        const newNotes = prompt("Edit notes for this eagle sighting:", graphic.attributes.Notes);
         if (newNotes === null) {
             return; // User cancelled the prompt
         }
@@ -212,6 +223,7 @@ require([
         const updatedFeature = {
             attributes: {
                 OBJECTID: graphic.attributes.OBJECTID,
+                Title: newTitle,
                 Notes: newNotes,
                 Latitude: graphic.attributes.Latitude,
                 Longitude: graphic.attributes.Longitude
@@ -224,6 +236,7 @@ require([
         }).then(function(result) {
             if (result.updateFeatureResults.length > 0) {
                 console.log("Successfully updated feature");
+                view.popup.title = newTitle;
                 view.popup.content = `Notes: ${newNotes}<br>Latitude: ${graphic.attributes.Latitude}<br>Longitude: ${graphic.attributes.Longitude}`;
                 // Refresh the layer to show updated data
                 eagleLayer.refresh();
