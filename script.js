@@ -12,7 +12,7 @@ require([
     "esri/Basemap"
 ], function(esriConfig, Map, MapView, Search, Graphic, FeatureLayer, Point, Popup, FeatureSet, Locate, Basemap) {
 
-    // Midterm_API key
+    // Replace with your actual API key
     esriConfig.apiKey = "AAPTxy8BH1VEsoebNVZXo8HurIMrpomeP09wA2mwDUzsv0qeG0ISCTpeTdFxzbJ-cyUaFo-9XhFvb2y3Ps4A2zWSfrftoqLWuot4lXYMNzoFBkDUoCb8jxcGwyOUD2pISEQQnWWGGZofh7_cB7YvPCG_6nfnOyI48dtNFykpOfUPCCiYNq0iZim3jZ_mF1WVIe8HoKc4qK-GLE0Zeuqls8UmxvtsnKzjGTHgPmbJMjfDrjY2XxUJkTWK0ZizpkBgFuDe6zfjbBtDp76EGl2dOWh1AVAyaY2elCyr_9CmM8n6oe8.AT1_sTU4Pkej";
 
     const map = new Map({
@@ -44,13 +44,39 @@ require([
         outFields: ["*"],
         popupTemplate: {
             title: "Eagle Sighting",
-            content: [{
-                type: "fields",
-                fieldInfos: [{
-                    fieldName: "notes",
-                    label: "Notes"
-                }]
-            }]
+            content: [
+                {
+                    type: "fields",
+                    fieldInfos: [
+                        { fieldName: "Notes", label: "Notes" },
+                        { fieldName: "Latitude", label: "Latitude" },
+                        { fieldName: "Longitude", label: "Longitude" }
+                    ]
+                },
+                {
+                    type: "custom",
+                    creator: function(event) {
+                        const graphic = event.graphic;
+                        const div = document.createElement("div");
+
+                        const editBtn = document.createElement("button");
+                        editBtn.innerText = "Edit";
+                        editBtn.onclick = function() {
+                            editEagle(graphic);
+                        };
+
+                        const deleteBtn = document.createElement("button");
+                        deleteBtn.innerText = "Delete";
+                        deleteBtn.onclick = function() {
+                            deleteEagle(graphic);
+                        };
+
+                        div.appendChild(editBtn);
+                        div.appendChild(deleteBtn);
+                        return div;
+                    }
+                }
+            ]
         }
     });
 
@@ -129,8 +155,14 @@ require([
         // Prompt user for notes
         const notes = prompt("Enter notes for this eagle sighting:");
 
+        if (notes === null) {
+            return; // User cancelled the prompt
+        }
+
         const attributes = {
-            notes: notes
+            Notes: notes,
+            Latitude: view.center.latitude,
+            Longitude: view.center.longitude
         };
 
         const graphic = new Graphic({
@@ -146,13 +178,61 @@ require([
                 console.log("Successfully added feature");
                 view.popup.open({
                     title: "Eagle Sighting Added",
-                    content: "Notes: " + notes,
+                    content: `Notes: ${notes}<br>Latitude: ${view.center.latitude}<br>Longitude: ${view.center.longitude}`,
                     location: point
                 });
             }
         }).catch(function(error) {
             console.error("Error adding feature: ", error);
         });
+    }
+
+    function editEagle(graphic) {
+        const newNotes = prompt("Edit notes for this eagle sighting:", graphic.attributes.Notes);
+
+        if (newNotes === null) {
+            return; // User cancelled the prompt
+        }
+
+        const updatedFeature = {
+            attributes: {
+                OBJECTID: graphic.attributes.OBJECTID,
+                Notes: newNotes,
+                Latitude: graphic.attributes.Latitude,
+                Longitude: graphic.attributes.Longitude
+            },
+            geometry: graphic.geometry
+        };
+
+        eagleLayer.applyEdits({
+            updateFeatures: [updatedFeature]
+        }).then(function(result) {
+            if (result.updateFeatureResults.length > 0) {
+                console.log("Successfully updated feature");
+                view.popup.content = `Notes: ${newNotes}<br>Latitude: ${graphic.attributes.Latitude}<br>Longitude: ${graphic.attributes.Longitude}`;
+                // Refresh the layer to show updated data
+                eagleLayer.refresh();
+            }
+        }).catch(function(error) {
+            console.error("Error updating feature: ", error);
+        });
+    }
+
+    function deleteEagle(graphic) {
+        if (confirm("Are you sure you want to delete this eagle sighting?")) {
+            eagleLayer.applyEdits({
+                deleteFeatures: [{ objectId: graphic.attributes.OBJECTID }]
+            }).then(function(result) {
+                if (result.deleteFeatureResults.length > 0) {
+                    console.log("Successfully deleted feature");
+                    view.popup.close();
+                    // Refresh the layer to show updated data
+                    eagleLayer.refresh();
+                }
+            }).catch(function(error) {
+                console.error("Error deleting feature: ", error);
+            });
+        }
     }
 
     // Request user's location and zoom to it
