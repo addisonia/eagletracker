@@ -45,39 +45,54 @@ require([
         popupTemplate: {
             title: "Eagle Sighting",
             content: [
-                {
-                    type: "fields",
-                    fieldInfos: [
-                        { fieldName: "Notes", label: "Notes" },
-                        { fieldName: "Latitude", label: "Latitude" },
-                        { fieldName: "Longitude", label: "Longitude" }
-                    ]
-                },
-                {
-                    type: "custom",
-                    creator: function(event) {
-                        const graphic = event.graphic;
-                        const div = document.createElement("div");
-
-                        const editBtn = document.createElement("button");
-                        editBtn.innerText = "Edit";
-                        editBtn.onclick = function() {
-                            editEagle(graphic);
-                        };
-
-                        const deleteBtn = document.createElement("button");
-                        deleteBtn.innerText = "Delete";
-                        deleteBtn.onclick = function() {
-                            deleteEagle(graphic);
-                        };
-
-                        div.appendChild(editBtn);
-                        div.appendChild(deleteBtn);
-                        return div;
-                    }
+              {
+                type: "fields",
+                fieldInfos: [
+                  { fieldName: "Notes", label: "Notes" }
+                ]
+              },
+              {
+                type: "text",
+                text: `Latitude: {expression/latitude}<br>Longitude: {expression/longitude}`
+              },
+              {
+                type: "custom",
+                creator: function(event) {
+                  const graphic = event.graphic;
+                  const div = document.createElement("div");
+          
+                  const editBtn = document.createElement("button");
+                  editBtn.innerText = "Edit";
+                  editBtn.onclick = function() {
+                    editEagle(graphic);
+                  };
+          
+                  const deleteBtn = document.createElement("button");
+                  deleteBtn.innerText = "Delete";
+                  deleteBtn.onclick = function() {
+                    deleteEagle(graphic);
+                  };
+          
+                  div.appendChild(editBtn);
+                  div.appendChild(deleteBtn);
+                  return div;
                 }
+              }
+            ],
+            expressionInfos: [
+              {
+                name: "latitude",
+                title: "Latitude",
+                expression: "Round(Geometry($feature).y, 6)"
+              },
+              {
+                name: "longitude",
+                title: "Longitude",
+                expression: "Round(Geometry($feature).x, 6)"
+              }
             ]
-        }
+          }
+          
     });
 
     map.add(eagleLayer);
