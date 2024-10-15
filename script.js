@@ -17,99 +17,144 @@ require([
 
     const map = new Map({
         basemap: "topo-vector"
-    });
-
-    const view = new MapView({
+      });
+    
+      const view = new MapView({
         container: "viewDiv",
         map: map,
         center: [-98.5795, 39.8283], // Center of USA
         zoom: 4
-    });
-
-    // Move zoom widget to bottom-left corner
-    view.ui.move("zoom", "bottom-left");
-
-    // Add locate widget
-    const locateBtn = new Locate({
+      });
+    
+      // Move zoom widget to bottom-left corner
+      view.ui.move("zoom", "bottom-left");
+    
+      // Add locate widget
+      const locateBtn = new Locate({
         view: view
-    });
-
-    view.ui.add(locateBtn, {
+      });
+    
+      view.ui.add(locateBtn, {
         position: "bottom-left"
-    });
-
-    // Define the feature layer for eagle sightings
-    const eagleLayer = new FeatureLayer({
+      });
+    
+      // Define the feature layer for eagle sightings
+      const eagleLayer = new FeatureLayer({
         url: "https://services.arcgis.com/HRPe58bUyBqyyiCt/arcgis/rest/services/Midterm_Layer/FeatureServer",
         outFields: ["*"],
         popupTemplate: {
-            title: "{Title}", // Use the 'Title' attribute for the popup title
-            content: [
-                {
-                    type: "fields",
-                    fieldInfos: [
-                        { fieldName: "Notes", label: "Notes" }
-                    ]
-                },
-                {
-                    type: "text",
-                    text: `Latitude: {expression/latitude}<br>Longitude: {expression/longitude}`
-                },
-                {
-                    type: "custom",
-                    creator: function(event) {
-                        const graphic = event.graphic;
-                        console.log("Graphic attributes in popup:", graphic.attributes);
-                        const div = document.createElement("div");
-
-                        const editBtn = document.createElement("button");
-                        editBtn.innerText = "Edit";
-                        editBtn.onclick = function() {
-                            editEagle(graphic);
-                        };
-
-                        const deleteBtn = document.createElement("button");
-                        deleteBtn.innerText = "Delete";
-                        deleteBtn.onclick = function() {
-                            deleteEagle(graphic);
-                        };
-
-                        div.appendChild(editBtn);
-                        div.appendChild(deleteBtn);
-                        return div;
-                    }
-                }
-            ],
-            expressionInfos: [
-                {
-                    name: "latitude",
-                    title: "Latitude",
-                    expression: "Round(Geometry($feature).y, 6)"
-                },
-                {
-                    name: "longitude",
-                    title: "Longitude",
-                    expression: "Round(Geometry($feature).x, 6)"
-                }
-            ]
+          title: "{Title}",
+          content: [
+            {
+              type: "fields",
+              fieldInfos: [
+                { fieldName: "Notes", label: "Notes" }
+              ]
+            },
+            {
+              type: "text",
+              text: `Latitude: {expression/latitude}<br>Longitude: {expression/longitude}`
+            },
+            {
+              type: "custom",
+              creator: function(event) {
+                const graphic = event.graphic;
+                const div = document.createElement("div");
+    
+                const editBtn = document.createElement("button");
+                editBtn.innerText = "Edit";
+                editBtn.onclick = function() {
+                  editEagle(graphic);
+                };
+    
+                const deleteBtn = document.createElement("button");
+                deleteBtn.innerText = "Delete";
+                deleteBtn.onclick = function() {
+                  deleteEagle(graphic);
+                };
+    
+                div.appendChild(editBtn);
+                div.appendChild(deleteBtn);
+                return div;
+              }
+            }
+          ],
+          expressionInfos: [
+            {
+              name: "latitude",
+              title: "Latitude",
+              expression: "Round(Geometry($feature).y, 6)"
+            },
+            {
+              name: "longitude",
+              title: "Longitude",
+              expression: "Round(Geometry($feature).x, 6)"
+            }
+          ]
         }
-    });
-
-    map.add(eagleLayer);
-
-    const search = new Search({
+      });
+    
+      map.add(eagleLayer);
+    
+      // Configure the Search widget
+      const search = new Search({
         view: view,
-        container: "searchBar"
-    });
+        container: "searchBar",
+        sources: [
+          {
+            layer: eagleLayer,
+            searchFields: ["Title"],
+            displayField: "Title",
+            exactMatch: false,
+            outFields: ["*"],
+            name: "Eagle Sightings",
+            placeholder: "Search for eagle sightings by title",
+            suggestionTemplate: "{Title}",
+            maxResults: 6,
+            maxSuggestions: 6,
+            suggestionsEnabled: true,
+            minSuggestCharacters: 1,
+            popupEnabled: false
+          }
+        ]
+      });
+    
+      // Handle search results
+      search.on("select-result", function(event) {
+        if (event.result && event.result.feature) {
+          const feature = event.result.feature;
+          view.goTo({
+            target: feature.geometry,
+            zoom: 15
+          }, {
+            duration: 1000
+          }).then(function() {
+            // Open the popup at the feature's location
+            view.popup.open({
+              features: [feature],
+              location: feature.geometry
+            });
+          });
+        } else {
+          alert("No matching eagle sightings found.");
+        }
+      });
+    
+      search.on("search-complete", function(event) {
+        if (event.numResults === 0) {
+          alert("No matching eagle sightings found.");
+        }
+      });
+    
+      document.getElementById("addEagleBtn").addEventListener("click", addEagle);
+    
+      // Add settings button functionality
+      const settingsBtn = document.getElementById("settingsBtn");
+      settingsBtn.addEventListener("click", toggleSettingsMenu);
+    
+      let settingsMenu = null;
 
-    document.getElementById("addEagleBtn").addEventListener("click", addEagle);
-
-    // Add settings button functionality
-    const settingsBtn = document.getElementById("settingsBtn");
-    settingsBtn.addEventListener("click", toggleSettingsMenu);
-
-    let settingsMenu = null;
-
+      
     function toggleSettingsMenu() {
         if (settingsMenu) {
             document.body.removeChild(settingsMenu);

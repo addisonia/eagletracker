@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EagleWatch</title>
     <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
     <link rel="stylesheet" href="styles.css">
@@ -10,12 +9,12 @@
 <body>
     <div id="topBar">
         <button id="settingsBtn"><img src="images/settings.png" alt="Settings"></button>
-        <input type="text" id="searchBar" placeholder="Search by location">
+        <div id="searchBar"></div>
     </div>
     <div id="viewDiv"></div>
     <button id="addEagleBtn">Add An Eagle</button>
 
     <script src="https://js.arcgis.com/4.27/"></script>
-    <script type="module" src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
